@@ -7,36 +7,18 @@
 Система построена на принципах микросервисов и асинхронной обработки с использованием Kafka.
 
 ```mermaid
-graph TD
-    subgraph "Client"
-        A[Client App]
-    end
 
-    subgraph "Gateway Service"
-        B(Gateway)
-        C[Redis Cache]
-    end
 
-    subgraph "Wallet Service"
-        D[Wallet Service API]
-        E[Wallet Service Consumer]
-    end
 
-    subgraph "Infrastructure"
-        F[Kafka Broker]
-        G[PostgreSQL DB]
-    end
-
-    A -- "HTTP Request" --> B
-    B -- "Check/Get from" --> C
-    C -- "Cache Miss" --> B
-    B -- "HTTP Get Wallet Info" --> D
-    D -- "Fetch Data" --> G
-    D -- "Cache Data" --> C
-    B -- "Validate & Send Event" --> F
-    F -- "wallet_event" --> E
-    E -- "Update Balance & Transaction" --> G
-    E -- "Invalidate Cache (Conceptual)" --> C
+graph LR
+    A[Client App] -->|HTTP| B(Gateway)
+    B -->|Check/Get| C(Redis Cache)
+    B -->|HTTP Get| D[Wallet Service API]
+    D -->|Fetch/Cache| C
+    B -->|Kafka Event| F[Kafka Broker]
+    F -->|wallet_event| E[Wallet Service Consumer]
+    D -->|DB Access| G[(PostgreSQL)]
+    E -->|Update/Save| G
 
     style A fill:#87CEEB
     style B fill:#98FB98
@@ -45,6 +27,8 @@ graph TD
     style E fill:#98FB98
     style F fill:#FFA07A
     style G fill:#DDA0DD
+
+
 
 
 ```
