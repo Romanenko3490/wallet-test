@@ -25,50 +25,18 @@ flowchart TD
     BalanceUpdate --> SaveTransaction[Save Transaction]
     SaveTransaction --> PostgreSQL
     
-    style Client fill:#e1f5fe
-    style Gateway fill:#f3e5f5
-    style WalletService fill:#e8f5e8
-    style Kafka fill:#fff3e0
-    style PostgreSQL fill:#ffebee
-
-
-sequenceDiagram
-    participant C as Client
-    participant G as API Gateway
-    participant R as Redis
-    participant WS as Wallet Service
-    participant K as Kafka
-    participant DB as PostgreSQL
-
-    Note over C,DB: Запрос на операцию с кошельком
-    
-    C->>G: HTTP POST /api/v1/wallet
-    G->>R: GET wallet:{walletId}
-    
-    alt Кэш найден
-        R-->>G: WalletCacheDto
-        G->>G: Validate balance for WITHDRAW
-        G->>K: Produce KafkaWalletEvent
-        G-->>C: 202 ACCEPTED
-    else Кэш не найден
-        R-->>G: null
-        G->>WS: HTTP GET /api/v1/wallets/{walletId}
-        WS->>DB: SELECT * FROM wallets
-        DB-->>WS: Wallet data
-        WS-->>G: WalletCacheDto
-        G->>R: SET wallet:{walletId}
-        G->>G: Validate balance for WITHDRAW
-        G->>K: Produce KafkaWalletEvent
-        G-->>C: 202 ACCEPTED
-    end
-    
-    Note over K,DB: Асинхронная обработка события
-    
-    K->>WS: Consume KafkaWalletEvent
-    WS->>DB: Check operationTrackId
-    WS->>DB: Update wallet balance
-    WS->>DB: Insert transaction record
-
+    style Client fill:#e1f5fe,color:#000000
+    style Gateway fill:#f3e5f5,color:#000000
+    style WalletService fill:#e8f5e8,color:#000000
+    style Kafka fill:#fff3e0,color:#000000
+    style PostgreSQL fill:#ffebee,color:#000000
+    style RedisCheck fill:#e3f2fd,color:#000000
+    style ProcessWithCache fill:#fce4ec,color:#000000
+    style WalletServiceReq fill:#f3e5f5,color:#000000
+    style KafkaProduce fill:#fff8e1,color:#000000
+    style KafkaConsumer fill:#e8f5e8,color:#000000
+    style BalanceUpdate fill:#f1f8e9,color:#000000
+    style SaveTransaction fill:#e0f2f1,color:#000000
 
 ```
 
