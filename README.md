@@ -31,7 +31,6 @@ flowchart TD
     style Kafka fill:#fff3e0
     style PostgreSQL fill:#ffebee
 
-```
 
 sequenceDiagram
     participant C as Client
@@ -69,6 +68,9 @@ sequenceDiagram
     WS->>DB: Check operationTrackId
     WS->>DB: Update wallet balance
     WS->>DB: Insert transaction record
+
+
+```
 
 ## Поток данных
 
