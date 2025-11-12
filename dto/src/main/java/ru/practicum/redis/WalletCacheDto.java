@@ -10,4 +10,5 @@ import java.util.UUID;
 public class WalletCacheDto {
     UUID walletId;
     Long balance;
+    String currency;
 }

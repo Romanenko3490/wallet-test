@@ -45,14 +45,15 @@ public class WalletService {
             backoff = @Backoff(delay = 100))
     public void updateBalanceFromEvent(KafkaWalletEvent event) {
         log.info("Event in processing {}: {}", event);
-        Wallet wallet = walletRepository.findById(event.getWalletId()).orElseThrow(
-                () -> new NotFoundException("Wallet with id: " + event.getWalletId() + " not found")
-        );
 
         if (transactionRepository.existsByOperationTrackId(event.getOperationTrackId())) {
             log.info("Duplicated operation track id {} already exists", event.getOperationTrackId());
             return;
         }
+
+        Wallet wallet = walletRepository.findById(event.getWalletId()).orElseThrow(
+                () -> new NotFoundException("Wallet with id: " + event.getWalletId() + " not found")
+        );
 
         if (event.getOperationType() == WalletOperationType.WITHDRAW &&
                 wallet.getBalance() < event.getAmount()) {

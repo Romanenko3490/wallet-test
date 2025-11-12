@@ -9,5 +9,6 @@ public interface WalletMapper {
 
     @Mapping(source = "id", target = "walletId")
     @Mapping(source = "balance", target = "balance")
+    @Mapping(source = "currency", target = "currency")
     WalletCacheDto walletToCacheDto(Wallet wallet);
 }
