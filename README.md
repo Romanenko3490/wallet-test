@@ -5,28 +5,70 @@
 ## Архитектура
 
 Система построена на принципах микросервисов и асинхронной обработки с использованием Kafka.
-
 ```mermaid
-graph LR
-    A[Client App] -->|HTTP| B(Gateway)
-    B -->|Check/Get| C(Redis Cache)
-    C -.->|Cache Miss| B
-    B -->|HTTP Get| D[Wallet Service API]
-    D -->|Fetch/Cache| C
-    B -->|Kafka Event| F[Kafka Broker]
-    F -->|wallet_event| E[Wallet Service Consumer]
-    D -->|DB Access| G[(PostgreSQL)]
-    E -->|Update/Save| G
-
-    style A fill:#87CEEB
-    style B fill:#98FB98
-    style C fill:#FFD700
-    style D fill:#98FB98
-    style E fill:#98FB98
-    style F fill:#FFA07A
-    style G fill:#DDA0DD
+flowchart TD
+    Client[Client Application] --> Gateway[API Gateway]
+    
+    Gateway --> RedisCheck{Check Redis Cache}
+    RedisCheck -->|Cache Hit| ProcessWithCache[Process with cached data]
+    RedisCheck -->|Cache Miss| WalletServiceReq[Request to Wallet Service]
+    
+    WalletServiceReq --> WalletService[Wallet Service]
+    WalletService --> PostgreSQL[(PostgreSQL)]
+    
+    ProcessWithCache --> KafkaProduce[Produce Kafka Event]
+    KafkaProduce --> Kafka[(Kafka Topic<br/>wallet_event)]
+    
+    Kafka --> KafkaConsumer[Wallet Service Consumer]
+    KafkaConsumer --> BalanceUpdate[Update Balance]
+    BalanceUpdate --> PostgreSQL
+    BalanceUpdate --> SaveTransaction[Save Transaction]
+    SaveTransaction --> PostgreSQL
+    
+    style Client fill:#e1f5fe
+    style Gateway fill:#f3e5f5
+    style WalletService fill:#e8f5e8
+    style Kafka fill:#fff3e0
+    style PostgreSQL fill:#ffebee
 
 ```
+
+sequenceDiagram
+    participant C as Client
+    participant G as API Gateway
+    participant R as Redis
+    participant WS as Wallet Service
+    participant K as Kafka
+    participant DB as PostgreSQL
+
+    Note over C,DB: Запрос на операцию с кошельком
+    
+    C->>G: HTTP POST /api/v1/wallet
+    G->>R: GET wallet:{walletId}
+    
+    alt Кэш найден
+        R-->>G: WalletCacheDto
+        G->>G: Validate balance for WITHDRAW
+        G->>K: Produce KafkaWalletEvent
+        G-->>C: 202 ACCEPTED
+    else Кэш не найден
+        R-->>G: null
+        G->>WS: HTTP GET /api/v1/wallets/{walletId}
+        WS->>DB: SELECT * FROM wallets
+        DB-->>WS: Wallet data
+        WS-->>G: WalletCacheDto
+        G->>R: SET wallet:{walletId}
+        G->>G: Validate balance for WITHDRAW
+        G->>K: Produce KafkaWalletEvent
+        G-->>C: 202 ACCEPTED
+    end
+    
+    Note over K,DB: Асинхронная обработка события
+    
+    K->>WS: Consume KafkaWalletEvent
+    WS->>DB: Check operationTrackId
+    WS->>DB: Update wallet balance
+    WS->>DB: Insert transaction record
 
 ## Поток данных
 
