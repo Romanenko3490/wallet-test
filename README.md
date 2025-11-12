@@ -7,12 +7,10 @@
 Система построена на принципах микросервисов и асинхронной обработки с использованием Kafka.
 
 ```mermaid
-
-
-
 graph LR
     A[Client App] -->|HTTP| B(Gateway)
     B -->|Check/Get| C(Redis Cache)
+    C -.->|Cache Miss| B
     B -->|HTTP Get| D[Wallet Service API]
     D -->|Fetch/Cache| C
     B -->|Kafka Event| F[Kafka Broker]
@@ -27,9 +25,6 @@ graph LR
     style E fill:#98FB98
     style F fill:#FFA07A
     style G fill:#DDA0DD
-
-
-
 
 ```
 
