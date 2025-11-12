@@ -15,6 +15,8 @@ flowchart TD
     
     WalletServiceReq --> WalletService[Wallet Service]
     WalletService --> PostgreSQL[(PostgreSQL)]
+    WalletService --> CacheUpdate[Cache to Redis]
+    CacheUpdate --> RedisCheck
     
     ProcessWithCache --> KafkaProduce[Produce Kafka Event]
     KafkaProduce --> Kafka[(Kafka Topic<br/>wallet_event)]
@@ -37,6 +39,7 @@ flowchart TD
     style KafkaConsumer fill:#e8f5e8,color:#000000
     style BalanceUpdate fill:#f1f8e9,color:#000000
     style SaveTransaction fill:#e0f2f1,color:#000000
+    style CacheUpdate fill:#fff3e0,color:#000000
 
 ```
 
